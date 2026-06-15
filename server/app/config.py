@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     smtp_port: Optional[int] = None
     smtp_user: Optional[str] = None
     smtp_pass: Optional[str] = None
+    smtp_from_email: Optional[str] = None
+    smtp_use_tls: bool = True
     max_agents: int = 500
     screenshot_quality: int = 70
     log_level: str = "INFO"

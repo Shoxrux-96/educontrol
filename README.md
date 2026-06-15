@@ -81,4 +81,5 @@ docker-compose up -d
 - [ ] `.exe` installer yaratish (Inno Setup yoki NSIS)
 - [ ] CI/CD pipeline (GitHub Actions)
 - [ ] Client Agent va Admin Desktop uchun SSL sertifikat tekshiruvi
-- [ ] Email notification (SMTP sozlash)
+- [x] Email notification (SMTP sozlash, `smtp_*` env vars bilan)
+- [ ] Email templates (HTML)

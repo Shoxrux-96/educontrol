@@ -12,6 +12,7 @@ from app.schemas.monitoring import (
     AlertStats,
 )
 from app.utils.types import UUIDStr
+from app.services.email_service import email_service
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +132,9 @@ class AlertService:
 
         if "log" in rule.notification_channels:
             self._log_alert(alert)
+
+        if "email" in rule.notification_channels:
+            email_service.send_alert_notification(alert.model_dump())
 
         return alert
 
