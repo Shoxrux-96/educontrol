@@ -49,3 +49,36 @@ docker-compose up -d
 - [O'rnatish qo'llanmasi](docs/INSTALL.md)
 - [Foydalanuvchi qo'llanmasi](docs/USER_MANUAL.md)
 - [API hujjatlari](docs/API.md)
+
+## Yakunlanmagan ishlar
+
+### Server
+- [x] Docker compose (6 service: nginx, server, postgres, redis, celery-worker, celery-beat)
+- [x] 55/55 pytest testlari o'tadi
+- [x] Monitoring + Alert tizimi (9 ta endpoint)
+- [x] Agent auto-update (build upload, check, download)
+- [x] Celery reports + scheduled tasks
+- [x] Nginx reverse proxy + HTTPS (SSL self-signed)
+- [ ] Rate limiting (Redis asosida)
+- [ ] API documentation (Swagger/Redoc maxfiylashtirish)
+
+### Client Agent (Windows)
+- [x] Barcha modullar yozilgan (internet, app, USB, screen, print, system)
+- [x] WebSocket ulanish, heartbeat, screenshot
+- [x] Auto-update tekshirish va yuklab olish
+- [ ] **PyInstaller bilan .exe build** (Windows'da bajariladi)
+- [ ] **Windows Service sifatida ishga tushirish** (pywin32)
+- [ ] Real kompyuterda sinov
+
+### Admin Desktop (Windows)
+- [x] Barcha widgetlar yozilgan (dashboard, computers, policies, audit, reports, screen monitor)
+- [x] WebSocket ulanish
+- [ ] **Bir marta ishga tushirish va sinash** (PySide6)
+- [ ] Auto-update (agent bilan birgalikda)
+
+### Boshqa
+- [ ] `.exe` installer yaratish (Inno Setup yoki NSIS)
+- [ ] CI/CD pipeline (GitHub Actions)
+- [ ] Client Agent va Admin Desktop uchun SSL sertifikat tekshiruvi
+- [ ] Server backup automation
+- [ ] Email notification (SMTP sozlash)
