@@ -1,0 +1,26 @@
+from pydantic_settings import BaseSettings
+from typing import Optional
+
+
+class Settings(BaseSettings):
+    database_url: str = "postgresql+asyncpg://educontrol:password@localhost:5432/educontrol"
+    redis_url: str = "redis://localhost:6379/0"
+    secret_key: str = "very-long-random-secret-key-256-bits"
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 7
+    screenshots_path: str = "/var/educontrol/screenshots"
+    screenshots_retention_days: int = 30
+    backup_path: str = "/var/educontrol/backups"
+    smtp_host: Optional[str] = None
+    smtp_port: Optional[int] = None
+    smtp_user: Optional[str] = None
+    smtp_pass: Optional[str] = None
+    max_agents: int = 500
+    screenshot_quality: int = 70
+    log_level: str = "INFO"
+
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+
+
+settings = Settings()

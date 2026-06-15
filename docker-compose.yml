@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: educontrol
+      POSTGRES_USER: educontrol
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - educontrol
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U educontrol"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    networks:
+      - educontrol
+    restart: unless-stopped
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://educontrol:password@postgres:5432/educontrol
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: very-long-random-secret-key-change-in-production
+      SCREENSHOTS_PATH: /data/screenshots
+      LOG_LEVEL: INFO
+    volumes:
+      - screenshots_data:/data/screenshots
+    ports:
+      - "8002:8000"
+    networks:
+      - educontrol
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  celery-worker:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    command: celery -A app.tasks.celery_app worker --loglevel=info
+    environment:
+      DATABASE_URL: postgresql+asyncpg://educontrol:password@postgres:5432/educontrol
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: very-long-random-secret-key-change-in-production
+    networks:
+      - educontrol
+    depends_on:
+      server:
+        condition: service_started
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  celery-beat:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    command: celery -A app.tasks.celery_app beat --loglevel=info
+    environment:
+      DATABASE_URL: postgresql+asyncpg://educontrol:password@postgres:5432/educontrol
+      REDIS_URL: redis://redis:6379/0
+    networks:
+      - educontrol
+    depends_on:
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8081:80"
+      - "8444:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - educontrol
+    depends_on:
+      server:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  screenshots_data:
+
+networks:
+  educontrol:
+    driver: bridge
