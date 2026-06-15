@@ -35,9 +35,9 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://educontrol:password@postgres:5432/educontrol
       REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: very-long-random-secret-key-change-in-production
-      SCREENSHOTS_PATH: /data/screenshots
+      SECRET_KEY: very-long-random-secret-key-256-bits
       LOG_LEVEL: INFO
+      RATE_LIMIT_ENABLED: "false"
     volumes:
       - screenshots_data:/data/screenshots
     ports:

@@ -20,6 +20,16 @@ class Settings(BaseSettings):
     screenshot_quality: int = 70
     log_level: str = "INFO"
 
+    rate_limit_enabled: bool = False
+    docs_enabled: bool = True
+    docs_api_key: str = ""
+    rate_limit_auth_max: int = 200
+    rate_limit_auth_window: int = 60
+    rate_limit_api_max: int = 1000
+    rate_limit_api_window: int = 60
+    rate_limit_monitoring_max: int = 100
+    rate_limit_monitoring_window: int = 60
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 

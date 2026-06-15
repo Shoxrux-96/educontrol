@@ -3,8 +3,9 @@ import logging
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -14,6 +15,7 @@ from app.websocket.manager import manager
 from app.websocket.handlers import handle_agent_message
 from app.services.monitor_service import monitor_service
 from app.services.alert_service import alert_service
+from app.middleware.rate_limit_middleware import RateLimitMiddleware
 
 logging.basicConfig(level=getattr(logging, settings.log_level))
 logger = logging.getLogger(__name__)
@@ -62,6 +64,8 @@ app = FastAPI(
     description="O'quv markazlari uchun kompyuterlarni markazlashtirilgan boshqarish tizimi",
     version="1.0.0",
     lifespan=lifespan,
+    docs_url="/docs" if settings.docs_enabled else None,
+    redoc_url="/redoc" if settings.docs_enabled else None,
 )
 
 app.add_middleware(
@@ -71,6 +75,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(RateLimitMiddleware)
 
 app.include_router(auth.router)
 app.include_router(computers.router)

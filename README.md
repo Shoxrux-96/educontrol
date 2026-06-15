@@ -59,8 +59,9 @@ docker-compose up -d
 - [x] Agent auto-update (build upload, check, download)
 - [x] Celery reports + scheduled tasks
 - [x] Nginx reverse proxy + HTTPS (SSL self-signed)
-- [ ] Rate limiting (Redis asosida)
-- [ ] API documentation (Swagger/Redoc maxfiylashtirish)
+- [x] Rate limiting (Redis asosida, opt-in: `RATE_LIMIT_ENABLED=true`)
+- [x] API docs (Swagger/Redoc, `docs_enabled=false` bilan yopish mumkin)
+- [x] Backup automation (Celery daily schedule)
 
 ### Client Agent (Windows)
 - [x] Barcha modullar yozilgan (internet, app, USB, screen, print, system)
@@ -80,5 +81,4 @@ docker-compose up -d
 - [ ] `.exe` installer yaratish (Inno Setup yoki NSIS)
 - [ ] CI/CD pipeline (GitHub Actions)
 - [ ] Client Agent va Admin Desktop uchun SSL sertifikat tekshiruvi
-- [ ] Server backup automation
 - [ ] Email notification (SMTP sozlash)
