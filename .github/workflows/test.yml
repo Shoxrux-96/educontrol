@@ -1,0 +1,116 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [master, main]
+    tags: ["v*"]
+  pull_request:
+    branches: [master, main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: educontrol_test
+          POSTGRES_USER: educontrol
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        working-directory: ./server
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run migrations
+        working-directory: ./server
+        run: |
+          pip install alembic
+          alembic upgrade head
+        env:
+          DATABASE_URL: postgresql+psycopg2://educontrol:password@localhost:5432/educontrol_test
+
+      - name: Run tests
+        working-directory: ./server
+        run: python -m pytest tests/ -v
+        env:
+          DATABASE_URL: postgresql+asyncpg://educontrol:password@localhost:5432/educontrol_test
+          REDIS_URL: redis://localhost:6379/0
+
+  build:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component: [server, client_agent]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build Docker image (server)
+        if: matrix.component == 'server'
+        run: |
+          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/server:${{ github.ref_name }} ./server
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/server:${{ github.ref_name }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/server:latest
+
+      - name: Log in to registry
+        if: matrix.component == 'server'
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+      - name: Push Docker image
+        if: matrix.component == 'server'
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/server:${{ github.ref_name }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/server:latest
+
+      - name: Install dependencies (agent)
+        if: matrix.component == 'client_agent'
+        run: |
+          pip install pyinstaller
+          pip install -r client_agent/requirements.txt
+
+      - name: Build agent .exe
+        if: matrix.component == 'client_agent'
+        run: |
+          cd client_agent
+          python build_agent.py
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.component == 'client_agent'
+        with:
+          name: educontrol-agent-${{ github.ref_name }}
+          path: client_agent/dist/educontrol_agent.exe
